@@ -31,3 +31,6 @@ pypdf
 
 # Modal
 modal
+
+# Local LLM
+ollama
