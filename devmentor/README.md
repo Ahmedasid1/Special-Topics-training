@@ -204,9 +204,19 @@ Conversation history also consumes the model's context window. This application 
 
 ## Challenges Questions
 
-- **Why did the model answer that Python was the favorite language?** The application sent the earlier user message as part of the conversation history on the later request.
-- **Did the prompts guarantee correct answers?** No. Prompt B and C included a dependency-injection example whose factory calls the redefined `DatabaseConnector` without its required `factory` argument. Prompt A also gave an incorrect expansion of REST.
-- **Did the concise prompt keep every answer short?** No. It shortened some explanations but did not prevent a long dependency-injection section, and its uncertainty instruction produced an unhelpful question.
+1. **Why does the app send previous messages to the LLM?** So each response can use relevant earlier turns, such as the user's stated favorite language.
+2. **What is the difference between system, user, and assistant messages?** A `system` message gives behavior instructions, a `user` message contains the person's input, and an `assistant` message contains the model's reply.
+3. **If you close Python and restart, why does the assistant “forget”?** The `messages` list exists only in the running process. Restarting creates a new list with only the system prompt.
+4. **Is memory stored inside the LLM or inside your application?** In this app, conversation memory is the `messages` list held by the Python application. The model uses the context sent with each request; it does not independently save this chat.
+5. **What happens when the conversation becomes extremely long? What is a context window?** A context window is the amount of text, measured in tokens, that a model can process for one request. This app sends the full history without trimming it, so a sufficiently long chat may exceed the model's limit and be truncated or rejected.
+6. **Why is `You are helpful.` a weak system prompt? How would you improve it?** It does not specify the assistant's role, audience, or how to answer. For example: `You are a programming tutor for beginners. Explain concepts accurately in clear steps, define technical terms, and give a small example. State uncertainty when needed.`
+7. **After the LLM replies, what should happen to `messages` before the next user turn, and why?** Append the assistant's answer so the next request contains both sides of the conversation:
+
+	```python
+	messages.append({"role": "assistant", "content": answer})
+	```
+
+	This preserves the turn order and lets the model use its own previous reply as context.
 
 ## Lessons Learned
 
